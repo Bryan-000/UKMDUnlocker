@@ -26,7 +26,7 @@ public static class BananasFix
 
         plugin.Log.LogInfo("Detected BananasDifficulty");
 
-        plugin.HarmonyPatches.PatchAll(typeof(Patches));
+        plugin.HarmonyPatches.PatchAll(typeof(BananasFix.Patches));
         SceneManager.activeSceneChanged += (_, _) => OnSceneChange();
     }
 

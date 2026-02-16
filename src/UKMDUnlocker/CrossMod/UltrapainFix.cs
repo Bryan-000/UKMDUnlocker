@@ -10,7 +10,7 @@ using UnityEngine.SceneManagement;
 
 public static class UltrapainFix
 {
-    public static bool HasUltrapain => Chainloader.PluginInfos.ContainsKey(Ultrapain.Plugin.PLUGIN_GUID);
+    public static bool HasUltrapain => Chainloader.PluginInfos.ContainsKey("com.eternalUnion.ultraPain");
     public static Transform Button => Ultrapain.Plugin.currentDifficultyButton.transform;
     public static Transform Info => Ultrapain.Plugin.currentDifficultyInfoText.transform.parent;
     

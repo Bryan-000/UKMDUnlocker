@@ -14,6 +14,8 @@ using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
 
 [BepInPlugin(PLUGIN_GUID, PLUGIN_NAME, PLUGIN_VERSION)]
+[BepInDependency("com.eternalUnion.ultraPain", BepInDependency.DependencyFlags.SoftDependency)]
+[BepInDependency("com.michi.BananaDifficulty", BepInDependency.DependencyFlags.SoftDependency)]
 public class Plugin : BaseUnityPlugin
 {
     // angry level loader does this, and I quite like it
@@ -47,7 +49,7 @@ public class Plugin : BaseUnityPlugin
         CrossMod.BananasFix.Init();
         CrossMod.UltrapainFix.Init();
 
-        HarmonyPatches.PatchAll(typeof(Patches));
+        HarmonyPatches.PatchAll(typeof(Plugin.Patches));
         Log.LogInfo($"Loaded {PLUGIN_NAME}");
     }
 
