@@ -1,4 +1,6 @@
 lib/*
 bin/*
 obj/*
+.vs/*
 .vscode/*
+*.sln
