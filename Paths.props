@@ -1,0 +1,17 @@
+﻿<Project>
+	<PropertyGroup>
+		<ULTRAKILLPath>C:\Program Files (x86)\Steam\steamapps\common\ULTRAKILL</ULTRAKILLPath>
+    
+    <PConfigPath>$(ULTRAKILLPath)\BepInEx\plugins\PluginConfigurator</PConfigPath>
+    <ALLPath>$(ULTRAKILLPath)\BepInEx\plugins\AngryLevelLoader\plugins\AngryLevelLoader</ALLPath>
+
+		<!-- Paths for the DLL to be copied to, split by semicolon -->
+		<CopyPaths>
+      $(ULTRAKILLPath)\BepInEx\plugins\UKMDUnlocker;
+    </CopyPaths>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<m_CopyPaths Include="$(CopyPaths)" />
+	</ItemGroup>
+</Project>

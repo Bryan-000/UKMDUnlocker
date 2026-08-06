@@ -1,38 +1,59 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="Paths.props" />
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.1</TargetFramework>
     <AssemblyName>UKMDUnlocker</AssemblyName>
     <Description>Adds ULTRAKILL MUST DIE to the difficulty selection menu.</Description>
-    <Version>0.3.1</Version>
+    <RepositoryUrl>https://github.com/Bryan-000/UKMDUnlocker</RepositoryUrl>
+    <Version>0.4.0</Version>
+
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <LangVersion>14</LangVersion>
+    <DebugType>embedded</DebugType>
+    <RootNamespace>UKMDUnlocker</RootNamespace>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <LangVersion>latest</LangVersion>
+    <NoWarn>IDE1006, IDE0044, IDE0130, IDE0028</NoWarn>
+
     <RestoreAdditionalProjectSources>
       https://api.nuget.org/v3/index.json;
       https://nuget.bepinex.dev/v3/index.json;
       https://nuget.samboy.dev/v3/index.json
     </RestoreAdditionalProjectSources>
-    <RootNamespace>UKMDUnlocker</RootNamespace>
-	<DebugType>Embedded</DebugType>
-    <NoWarn>IDE1006, IDE0044, IDE0130, IDE0028</NoWarn>
+    <ManagedPath>$(ULTRAKILLPath)\ULTRAKILL_Data\Managed</ManagedPath>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="UnityEngine.Modules" Version="2022.3.28" IncludeAssets="compile" />
-    <Reference Include="lib\BepInEx.dll" />
-    <Reference Include="lib\0Harmony.dll" />
+    <PackageReference Include="HarmonyX" Version="2.9.0"/>
+    <PackageReference Include="BepInEx.Core" Version="5.4.21" />
+    <PackageReference Include="BepInEx.AssemblyPublicizer.MSBuild" Version="0.4.3" />
+    <PackageReference Include="UnityEngine.Modules" Version="2022.3.29" IncludeAssets="compile" />
 
-    <Reference Include="lib\Assembly-CSharp.dll" />
-    <Reference Include="lib\plog.dll" />
-    <Reference Include="lib\Unity.TextMeshPro.dll" />
-    <Reference Include="lib\UnityEngine.UI.dll" />
+    <Reference Include="$(ManagedPath)\plog.dll" />
+    <Reference Include="$(ManagedPath)\Assembly-CSharp.dll" />
+    <Reference Include="$(ManagedPath)\Unity.TextMeshPro.dll" />
+    <Reference Include="$(ManagedPath)\UnityEngine.UI.dll" />
 
-    <Reference Include="lib\AngryLevelLoader.dll" />
-    <Reference Include="lib\AngryUiComponents.dll" />
-    <Reference Include="lib\PluginConfigurator.dll" />
+    <Reference Include="$(PConfigPath)\PluginConfigurator.dll" />
+    <Reference Include="$(ALLPath)\AngryUiComponents.dll" />
+    <Reference Include="$(ALLPath)\AngryLevelLoader.dll" Publicize="true" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(TargetFramework.TrimEnd(`0123456789`))' == 'net'">
-    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.2" PrivateAssets="all" />
-  </ItemGroup>
+  
+  <Target Name="CheckPath">
+    <Error Condition="!Exists($($(Path)))" Text="$(Path) not set, open the Paths.props file and set $(Path)." />
+  </Target>
+
+  <!-- Checks required paths for building to see if they exist, if they dont it throws an error. -->
+  <Target Name="PreBuild" BeforeTargets="Build">
+    <CallTarget Targets="CheckPath" Properties="Path=ULTRAKILLPath" />
+    <CallTarget Targets="CheckPath" Properties="Path=PConfigPath" />
+    <CallTarget Targets="CheckPath" Properties="Path=ALLPath" />
+  </Target>
+  
+
+  <Target Name="PostBuild" AfterTargets="Build">
+    <!-- Copy the DLL to all the m_CopyPaths -->
+    <Message Text="Copying DLL to %(m_CopyPaths.Identity)..." Importance="high" />
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="%(m_CopyPaths.Identity)" OverwriteReadOnlyFiles="true"  SkipUnchangedFiles="true" />
+  </Target>
 </Project>
