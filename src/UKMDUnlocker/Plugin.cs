@@ -1,27 +1,29 @@
 ﻿namespace UKMDUnlocker;
 
-using BepInEx;
-using BepInEx.Logging;
-using HarmonyLib;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+
+using BepInEx;
+using BepInEx.Logging;
+using HarmonyLib;
+using static BepInEx.BepInDependency;
 
 using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
+using UnityEngine.UIElements;
 
 [BepInPlugin(PLUGIN_GUID, PLUGIN_NAME, PLUGIN_VERSION)]
-[BepInDependency("com.eternalUnion.ultraPain", BepInDependency.DependencyFlags.SoftDependency)]
-[BepInDependency("com.michi.BananaDifficulty", BepInDependency.DependencyFlags.SoftDependency)]
+[BepInDependency(AngryLevelLoader.Plugin.PLUGIN_GUID, Flags: DependencyFlags.SoftDependency)]
 public class Plugin : BaseUnityPlugin
 {
     // angry level loader does this, and I quite like it
     public const string PLUGIN_GUID = "com.whyis2plus2.UKMDUnlocker";
     public const string PLUGIN_NAME = "UKMDUnlocker";
-    public const string PLUGIN_VERSION = "0.2.2";
+    public const string PLUGIN_VERSION = "0.3.1";
 
     public const string DIF_NAME = "Ultrakill Must Die";
     public const string DIF_NAME_SHORT = "UKMD";
@@ -32,11 +34,14 @@ public class Plugin : BaseUnityPlugin
     /// <summary> The "interactable" components of the difficulty select menu (mostly just difficulty buttons and infos) </summary>
     public Transform Interactables {private set; get;}
 
+    /// <summary> Easy and convenient variable for accessing the Canvas </summary>
+    public Transform Canvas {private set; get;}
+
     public GameObject UKMDButton = null;
     public GameObject UKMDInfo = null;
 
     /// <summary> Public version of the Logger so that the rest of the mod can acess it </summary>
-    public ManualLogSource Log => Logger;
+    public ManualLogSource logger => Logger;
 
     /// <summary> We need to have an instance of this in order to do patches </summary>
     public readonly Harmony HarmonyPatches = new(PLUGIN_GUID);
@@ -45,12 +50,11 @@ public class Plugin : BaseUnityPlugin
     {
         Instance = this;
         SceneManager.activeSceneChanged += (_, _) => OnSceneChange();
+        
+        Compat.AngryFix.Init();
 
-        CrossMod.BananasFix.Init();
-        CrossMod.UltrapainFix.Init();
-
-        HarmonyPatches.PatchAll(typeof(Plugin.Patches));
-        Log.LogInfo($"Loaded {PLUGIN_NAME}");
+        HarmonyPatches.PatchAll(typeof(Patches));
+        logger.LogInfo($"Loaded {PLUGIN_NAME}");
     }
 
     void OnSceneChange()
@@ -58,10 +62,10 @@ public class Plugin : BaseUnityPlugin
         LeaderboardProperties.Difficulties[5] = (SceneHelper.CurrentScene == "Main Menu")? DIF_NAME_SHORT : DIF_NAME;
         if (SceneHelper.CurrentScene != "Main Menu") return;
 
-        var canvas = (from obj in SceneManager.GetActiveScene().GetRootGameObjects() where obj.name == "Canvas" select obj).First().transform;
+        Canvas = (from obj in SceneManager.GetActiveScene().GetRootGameObjects() where obj.name == "Canvas" select obj).First().transform;
 
         // difficulty buttons and difficulty infos
-        Interactables = canvas.Find("Difficulty Select (1)/Interactables");
+        Interactables = Canvas.Find("Difficulty Select (1)/Interactables");
 
         // create the new UKMD button and Info
         AddInfo();
@@ -74,7 +78,7 @@ public class Plugin : BaseUnityPlugin
         KeyValuePair<string, GameObject> FindElem(string name) =>
             new(name, Interactables.Find(name).gameObject);
 
-        Log.LogInfo("Adding UKMD Button...");
+        logger.LogInfo("Adding UKMD Button...");
 
         Dictionary<string, GameObject> buttons = new([
             FindElem("Casual Easy"), // Harmless
@@ -82,7 +86,7 @@ public class Plugin : BaseUnityPlugin
             FindElem("Standard"),
             FindElem("Violent"),
             FindElem("Brutal"),
-            FindElem("V1 Must Die"), // Normal UKMD button
+            FindElem("V1 Must Die"), // Real UKMD button
         ]);
 
         Dictionary<string, GameObject> infos = new([
@@ -131,19 +135,35 @@ public class Plugin : BaseUnityPlugin
             }),
 
             Tools.CreateTriggerEntry(EventTriggerType.PointerExit,  _ => UKMDInfo.SetActive(false)),
-            Tools.CreateTriggerEntry(EventTriggerType.PointerClick, _ => UKMDInfo.SetActive(Interactables.gameObject.activeSelf)),
+            Tools.CreateTriggerEntry(EventTriggerType.PointerClick, eventData =>
+            {
+                Tools.Difficulty = GameDifficulty.UKMD;
+                UKMDInfo.SetActive(false);
+            }),
         ]);
+
+        if (Compat.AngryFix.hasAngry)
+        {
+            ukmdTrigger.triggers.Add(
+                Tools.CreateTriggerEntry(EventTriggerType.PointerClick, _ =>
+                {
+                    Compat.AngryFix.angryDifficultyField.difficultyListValueIndex = 5;
+                    Compat.AngryFix.angryDifficultyField.difficultyListValue = DIF_NAME_SHORT;
+                    logger.LogInfo("Setting Angry difficulty to UKMD");
+                })
+            );
+        }
 
         // add ukmd button to the button activation sequence
         var activationSequence = Interactables.GetComponent<ObjectActivateInSequence>();
-        activationSequence.objectsToActivate[14 /* index of vanilla ukmd button */] = UKMDButton;
+        activationSequence.objectsToActivate[14 /* index of real ukmd button */] = UKMDButton;
 
-        Log.LogInfo("Added UKMD Button");
+        logger.LogInfo("Added UKMD Button");
     }
 
     void AddInfo()
     {
-        Log.LogInfo("Adding UKMD Info...");
+        logger.LogInfo("Adding UKMD Info...");
 
         UKMDInfo = Instantiate(Interactables.Find("Brutal Info").gameObject, Interactables);
         UKMDInfo.name = $"{DIF_NAME_SHORT} Info";
@@ -166,7 +186,7 @@ public class Plugin : BaseUnityPlugin
             <b>Recommended for players who have achieved near mastery over the game and are looking for a fitting challenge.</b>
             """;
 
-        Log.LogInfo("Added UKMD Info");
+        logger.LogInfo("Added UKMD Info");
     }
 
     static class Patches

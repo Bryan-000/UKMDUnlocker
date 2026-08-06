@@ -1,6 +1,11 @@
-lib/*
-bin/*
-obj/*
-.vs/*
 .vscode/*
-*.sln
+.vs/
+.idea/
+.git/
+
+bin/*
+lib/*
+obj/*
+out/*
+
+whyis2plus2-UKMDUnlocker-*.zip
