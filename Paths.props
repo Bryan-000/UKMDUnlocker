@@ -13,5 +13,9 @@
 
 	<ItemGroup>
 		<m_CopyPaths Include="$(CopyPaths)" />
+
+    <PathsToCheck Include="ULTRAKILLPath" Name="ULTRAKILL" />
+    <PathsToCheck Include="PConfigPath" Name="Plugin Configurator" />
+    <PathsToCheck Include="ALLPath" Name="AngryLevelLoader" />
 	</ItemGroup>
 </Project>
